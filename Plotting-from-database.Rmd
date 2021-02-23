@@ -1,0 +1,413 @@
+---
+title: "Plotting Data from Databases in R"
+subtitle: "<br/>Introducing dbplot"
+author: "StatistikinDD"
+date: "Created: `r Sys.time()`"
+output:
+  xaringan::moon_reader:
+    chakra: libs/remark-latest.min.js
+    lib_dir: libs
+    css: ["libs/_css/my_css.css"]
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      slideNumberFormat: "%current%"
+      ratio: 16:9
+---
+class: inverse, agenda
+
+```{r setup, include = FALSE}
+
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, comment = "")
+
+library(tsortmusicr)
+library(tidyverse)
+library(dbplot)
+library(DBI)
+library(knitr)
+# library(DT)
+# library(widgetframe)
+library(ggthemes)
+
+```
+
+
+# Plotting from Databases in R
+
+### 1. How to plot data from a database *efficiently*
+### 2. Chart success data: tsort.info
+### 3. Setting up an In-Memory Database
+### 4. Bar Plot Examples
+### 5. Histogram
+### 6. Scatter Plot vs. Raster Plot
+
+---
+
+# Plotting from Databases in R
+
+## How to do it *efficiently*
+
+* Data in databases is often large
+
+* Bottleneck: How much data is transferred from database to R
+
+* Visualizations often only require **aggregated data**
+
+### Best practice
+
+1. Run data transformation within database
+2. Plot results (aggregated data) from R
+
+
+---
+
+# Chart success data: tsort.info
+
+```{r read_data, message = FALSE}
+
+music <- readRDS("musicdata.rds")
+
+```
+
+* Data: 71291 songs and albums
+* Source: https://tsort.info
+* Version: `r attr(music, "version")`
+* Size of dataset: `r format(object.size(music), units = "Mb")`
+
+--
+
+```{r data-head}
+
+music %>%
+  select(artist, name, type, year, score) %>%
+  arrange(desc(score)) %>%
+  head(n = 7) %>%
+  kable()
+
+```
+
+---
+
+# Creating an In-Memory Database
+
+```{r database-setup, echo = TRUE}
+
+con <- DBI::dbConnect(RSQLite::SQLite(), dbname = ":memory:")
+
+dplyr::copy_to(con, music, "musicdb",
+    temporary = FALSE,
+    indexes = list(
+        c("year", "score")
+    )
+)
+
+musicdb <- tbl(con, "musicdb")
+class(musicdb)
+  
+```
+
+---
+# Count Frequencies: Bar Plot
+
+We filter down to the Top 5 most successful artists / bands in terms of total score.
+
+.pull-left[
+
+```{r barplot1, echo = TRUE, eval = FALSE}
+top5 <- musicdb %>% 
+  filter(artist != "Original Soundtrack") %>% 
+  group_by(artist) %>% 
+  summarise(total = sum(score)) %>% 
+  slice_max(order_by = total, n = 5) %>% 
+  pull(artist) 
+
+theme_set(theme_economist(base_size = 14))
+
+musicdb %>% 
+  filter(artist %in% top5) %>% 
+  ggplot(aes(x = fct_infreq(artist))) +
+    geom_bar() +          #<<
+    labs(title = "Top 5: # Songs and Albums",
+         x = "")
+
+```
+
+* geom_bar() calculates summary statistics in R.
+* Inefficient: Each selected song / album pulled to R's memory!
+
+]
+
+.pull-right[
+
+```{r barplot1_exec, ref.label = "barplot1"}
+
+```
+
+]
+
+---
+
+# Bar Plot: Calculate in DB, Manually
+
+We can calculate summary statistics manually, and pull only aggregated data into R's memory:
+
+.pull-left[
+
+```{r barplot2, echo = TRUE, eval = FALSE}
+
+musicdb %>% 
+  filter(artist %in% top5) %>% 
+  group_by(artist) %>%   
+  tally() %>%   
+  arrange(desc(n)) %>% 
+  collect() %>% 
+  ggplot(aes(x = fct_inorder(artist))) +
+    geom_col(aes(y = n)) +  #<<
+    labs(title = "Top 5: # Songs and Albums",
+         x = "")
+```
+
+* geom_col() uses pre-computed summary data
+* Efficient: Only 5 data points pulled to R's memory
+
+* Downside: Tedious to calculate manually
+* -> Better yet: Use a dedicated package!
+
+]
+
+.pull-right[
+
+```{r barplot2_exec, ref.label = "barplot2"}
+
+```
+
+]
+
+---
+
+# The dbplot Package
+
+.pull-left[
+dbplot by **Edgar Ruiz** offers plotting functions that  
+**automatically calculate summary statistics in the DB**
+
+```{r dbplot-logo, out.height = "60%", out.width = "60%"}
+include_graphics("libs/_Images/logo-dbplot.png")
+```
+
+```{r dbplot1, echo = TRUE, eval = FALSE}
+
+musicdb %>% 
+  filter(artist %in% top5) %>% 
+  dbplot_bar(artist) +   #<<
+     labs(title = "Top 5: # Songs and Albums",
+         x = "", y = "n")
+
+```
+
+* Order of bars not so easy to adjust
+* Not all functions available for in-database-calculations
+
+]
+.pull-right[
+```{r dbplot1_exec, ref.label = "dbplot1"}
+
+```
+
+]
+
+---
+
+# dbplot: In-Database Calculations
+
+.pull-left[
+
+## Calculate Counts Easily
+
+```{r db-compute-count, echo = TRUE, eval = FALSE}
+
+musicdb %>% 
+  filter(artist %in% top5) %>% 
+  db_compute_count(artist) %>%   #<<
+  arrange(desc(`n()`)) %>% 
+  ggplot(aes(x = fct_inorder(artist), y = `n()`)) +
+     geom_col() +    #<<
+     labs(title = "Top 5: # Songs and Albums",
+         x = "", y = "n")
+
+```
+
+* Using geom_col() again, as summary statistics are pre-calculated
+* Now we can use forcats::fct_inorder() or similar functions
+* Only 5 rows of data pulled into R's memory
+]
+
+
+.pull-right[
+```{r db-compute-count-exec, ref.label = "db-compute-count"}
+
+```
+
+]
+
+---
+
+# dbplot: Histogram
+
+Here's a histogram example: Years in which songs and albums were published.
+
+.pull-left[
+```{r histogram, echo = TRUE, eval = FALSE}
+
+musicdb %>% 
+  dbplot_histogram(year, bins = 40) +   #<<
+  labs(title = "Histogram of Years",
+       subtitle = "Publication of Songs / Albums")
+
+```
+
+* Again, only aggregated data pulled into R
+
+]
+
+.pull-right[
+```{r histogram_exec, ref.label = "histogram"}
+
+```
+
+]
+
+---
+
+# An Inefficient Scatterplot
+
+.pull-left[
+
+```{r score-summary}
+
+musicdb %>% 
+  summarise(min = min(score),
+            # q1 = quantile(score, 0.25),
+            median = median(score),
+            mean = mean(score),
+            # q3 = quantile(score, 0.75),
+            max = max(score)) %>% 
+  kable(caption = "Distribution of Scores")
+
+```
+
+
+```{r scatterplot, eval = FALSE, echo = TRUE}
+
+musicdb %>% 
+  ggplot(aes(x = year, y = score)) +
+  geom_point(alpha = 0.1) + #<<
+  labs(title = "Scores by Year",
+       subtitle = "Scatterplot")
+
+```
+
+
+* Needs access to all data points in R
+* May take long to execute (data transfer and plotting)
+
+]
+
+.pull-right[
+
+```{r scatterplot-exec, ref.label = "scatterplot"}
+
+```
+
+]
+
+---
+
+# More Efficient: A Raster Plot
+
+.pull-left[
+
+```{r raster-plot, echo = TRUE, eval = FALSE}
+
+musicdb %>% 
+  dbplot_raster(x = year, y = score, #<<
+                resolution = 40) +   #<<
+  labs(title = "Scores by Year",
+       subtitle = "Raster Plot") +
+  theme(legend.key.width = unit(3, "cm"),
+        legend.position = "bottom")
+
+```
+
+* Parameter *resolution* in dbplot_raster():  
+number of bins by variable
+* Can provide different aggregation function in *fill* parameter. Defaults to count.
+* Much quicker to execute.
+* Same conclusion: Majority of values in low score range.
+
+]
+
+.pull-right[
+
+```{r raster-plot-exec, ref.label = "raster-plot"}
+```
+]
+---
+
+# dbplot: Main Functions
+
+.pull-left[
+
+## Plotting functions
+
+* dbplot_bar()
+* dbplot_histogram()
+* dbplot_line()
+* dbplot_raster()
+* dbplot_boxplot()
+
+]
+
+.pull-right[
+
+## Calculation functions
+
+* db_compute_count()
+* db_compute_bins()
+* db_compute_raster()
+* db_compute_raster2():  
+Adds coordinates of x/y boxes
+* db_compute_boxplot()
+
+]
+
+---
+class: center, middle
+
+# Credit to the awesome RStudio Team.
+
+### For more information see https://db.rstudio.com/
+
+### Specifically: Best Practices - Creating Visualizations
+
+```{r tidy-up}
+DBI::dbDisconnect(con)
+```
+
+---
+
+class: center, middle
+
+# Thanks!
+
+### Youtube: StatistikinDD
+
+### Twitter: @StatistikinDD
+
+### github: fjodor
+
+Slides created via the R package [**xaringan**](https://github.com/yihui/xaringan).
+
+The chakra comes from [remark.js](https://remarkjs.com), [**knitr**](https://yihui.org/knitr), and [R Markdown](https://rmarkdown.rstudio.com).
