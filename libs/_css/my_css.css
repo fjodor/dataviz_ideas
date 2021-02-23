@@ -1,0 +1,163 @@
+/* Wolfs CSS-Anpassungen */
+
+/* Neu */
+
+/* colors = c(
+  white = "#FFFFFF",
+  orange = "#ff8811",
+  green = "136f63"
+) */
+
+.white {color: white; }
+.orange {color: orange; }
+.yellow {color: yellow; }
+.green {color: green; }
+.red {color: red; }
+
+.agenda .remark-slide-number {
+  display: none;
+}
+
+.agenda {
+  font-size: 25pt;
+}
+
+/* From https://community.rstudio.com/t/how-to-indent-a-code-chunk-without-adding-a-list/24620/12 */
+
+.indent {
+ margin-left: 30px;
+}
+
+
+/* Aus default.css */
+
+a, a > code {
+  color: rgb(249, 38, 114);
+  text-decoration: none;
+}
+.footnote {
+  position: absolute;
+  bottom: 3em;
+  padding-right: 4em;
+  font-size: 90%;
+}
+.remark-code-line-highlighted     { background-color: #ffff88; }
+
+.inverse {
+  background-color: #272822;
+  color: #d6d6d6;
+  text-shadow: 0 0 20px #333;
+}
+.inverse h1, .inverse h2, .inverse h3 {
+  color: #f3f3f3;
+}
+
+/* Two-column layout */
+
+.left-column {
+  color: #777;
+  width: 20%;
+  height: 92%;
+  float: left;
+}
+
+.left-column h2:last-of-type, .left-column h3:last-child {
+  color: #000;
+}
+
+.right-column {
+  width: 75%;
+  float: right;
+  padding-top: 1em;
+}
+
+.pull-left {
+  float: left;
+  width: 50%;
+}
+.pull-right {
+  float: right;
+  width: 40%;
+}
+.pull-right + * {
+  clear: both;
+}
+
+img, video, iframe {
+  max-width: 100%;
+}
+blockquote {
+  border-left: solid 5px lightgray;
+  padding-left: 1em;
+}
+
+.remark-slide table {
+  margin: auto;
+  border-top: 1px solid #666;
+  border-bottom: 1px solid #666;
+}
+
+.remark-slide table thead th { border-bottom: 1px solid #ddd; }
+th, td { padding: 5px; }
+.remark-slide thead, .remark-slide tfoot, .remark-slide tr:nth-child(even) { background: #eee }
+
+@page { margin: 0; }
+@media print {
+  .remark-slide-scaler {
+    width: 100% !important;
+    height: 100% !important;
+    transform: scale(1) !important;
+    top: 0 !important;
+    left: 0 !important;
+  }
+}
+
+
+/* From hygge.scc */
+
+.content-box-blue {
+    background-color: #F0F8FF;
+
+}
+
+.content-box-gray {
+    background-color: #e2e2e2;
+}
+
+.content-box-grey {
+	background-color: #F5F5F5;
+}
+
+/* From Garrick Aden-Buie
+https://www.garrickadenbuie.com/blog/better-progressive-xaringan/
+*/
+
+.highlight-last-item > ul > li, 
+.highlight-last-item > ol > li {
+  opacity: 0.5;
+}
+.highlight-last-item > ul > li:last-of-type,
+.highlight-last-item > ol > li:last-of-type {
+  opacity: 1;
+}
+
+/* From insert-footer.html (not used here) */
+
+/*
+.remark-slide-number  {
+  opacity: 1;
+  color: #FFFFFF;
+  font-size: 13pt;
+  bottom: 17px;
+  right: 50%;
+  z-index: 1;
+}
+*/
+
+.title-slide .remark-slide-number {
+  display: none;
+}
+
+.hide-footer .remark-slide-number {
+  display: none;
+}
