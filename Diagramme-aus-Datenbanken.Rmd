@@ -1,0 +1,412 @@
+---
+title: "Diagramme mit Daten<br>aus Datenbanken in R"
+subtitle: "<br/>Einführung in dbplot"
+author: "StatistikinDD"
+date: "Erstellt: `r Sys.time()`"
+output:
+  xaringan::moon_reader:
+    chakra: libs/remark-latest.min.js
+    lib_dir: libs
+    css: ["libs/_css/my_css.css"]
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      slideNumberFormat: "%current%"
+      ratio: 16:9
+---
+class: inverse, agenda
+
+```{r setup, include = FALSE}
+
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, comment = "")
+
+library(tsortmusicr)
+library(tidyverse)
+library(dbplot)
+library(DBI)
+library(knitr)
+# library(DT)
+# library(widgetframe)
+library(ggthemes)
+
+```
+
+
+# Diagramme erstellen mit Daten<br>aus Datenbanken in R
+
+### 1. Wie wird die Diagramm-Erstellung *effizient*?
+### 2. Daten zu weltweiten Musikcharts: tsort.info
+### 3. Ad-hoc-Datenbank im Arbeitsspeicher
+### 4. Balkendiagramme
+### 5. Histogramm
+### 6. Streudiagramm vs. Raster-Diagramm (*Raster Plot*)
+
+---
+
+# Diagramme mit Daten<br>aus Datenbanken in R
+
+## Wie wird die Diagramm-Erstellung effizient?
+
+* Oft große Datenmengen in Datenbanken
+
+* Flaschenhals: Welche Datenmenge wird nach R verschoben?
+
+* Für Visualisierungen genügen oftmals **aggregierte Daten**
+
+### Empfehlungen
+
+1. Berechnungen soweit möglich in der Datenbank ausführen
+2. Ergebnisse (aggregierte Daten) in R plotten
+
+
+---
+
+# Weltweite Musikcharts: tsort.info
+
+```{r read_data, message = FALSE}
+
+music <- readRDS("musicdata.rds")
+
+```
+
+* Daten: 71.291 Songs und Alben
+* Quelle: https://tsort.info
+* Version: `r attr(music, "version")`
+* Größe des Datensatzes: `r format(object.size(music), units = "Mb")`
+
+--
+
+```{r data-head}
+
+music %>%
+  select(artist, name, type, year, score) %>%
+  arrange(desc(score)) %>%
+  head(n = 7) %>%
+  kable()
+
+```
+
+---
+
+# Datenbank im Arbeitsspeicher anlegen
+
+```{r database-setup, echo = TRUE}
+
+con <- DBI::dbConnect(RSQLite::SQLite(), dbname = ":memory:")
+
+dplyr::copy_to(con, music, "musicdb",
+    temporary = FALSE,
+    indexes = list(
+        c("year", "score")
+    )
+)
+
+musicdb <- tbl(con, "musicdb")
+class(musicdb)
+  
+```
+
+---
+# Häufigkeiten: Balkendiagramm
+
+Wir filtern nach den 5 erfolgreichsten Künstlern / Bands nach Gesamt-Punktzahl.
+
+.pull-left[
+
+```{r barplot1, echo = TRUE, eval = FALSE}
+top5 <- musicdb %>% 
+  filter(artist != "Original Soundtrack") %>% 
+  group_by(artist) %>% 
+  summarise(total = sum(score)) %>% 
+  slice_max(order_by = total, n = 5) %>% 
+  pull(artist) 
+
+theme_set(theme_economist(base_size = 14))
+
+musicdb %>% 
+  filter(artist %in% top5) %>% 
+  ggplot(aes(x = fct_infreq(artist))) +
+    geom_bar() +          #<<
+    labs(title = "Top 5: # Songs and Albums",
+         x = "")
+
+```
+
+* geom_bar() berechnet zusammenfassende Statistiken in R.
+* Ineffizient! Alle ausgewählten Datenzeilen (Songs / Alben) werden nach R importiert.
+
+]
+
+.pull-right[
+
+```{r barplot1_exec, ref.label = "barplot1"}
+
+```
+
+]
+
+---
+
+# Manuelle Berechnung in DB
+
+Wir können selbst zusammenfassende Statistiken berechnen und nur die aggregierten Daten nach R verschieben.
+
+.pull-left[
+
+```{r barplot2, echo = TRUE, eval = FALSE}
+
+musicdb %>% 
+  filter(artist %in% top5) %>% 
+  group_by(artist) %>%   
+  tally() %>%   
+  arrange(desc(n)) %>% 
+  collect() %>% 
+  ggplot(aes(x = fct_inorder(artist))) +
+    geom_col(aes(y = n)) +  #<<
+    labs(title = "Top 5: # Songs and Albums",
+         x = "")
+```
+
+* geom_col() nutzt die zuvor berechneten Kennzahlen
+* Effizient: Nur 5 Datenpunkte werden nach R verschoben.
+
+* Nachteil: Manuelle Berechnung bedeutet Zusatzaufwand
+* -> Besser: Spezialisiertes R-Paket verwenden!
+
+]
+
+.pull-right[
+
+```{r barplot2_exec, ref.label = "barplot2"}
+
+```
+
+]
+
+---
+
+# Das dbplot-Paket
+
+.pull-left[
+dbplot von **Edgar Ruiz** bietet Diagramm-Funktionen, die  
+**automatisch zusammenfassende Statistiken in der Datenbank berechnen.**
+
+```{r dbplot-logo, out.height = "60%", out.width = "60%"}
+include_graphics("libs/_Images/logo-dbplot.png")
+```
+
+```{r dbplot1, echo = TRUE, eval = FALSE}
+
+musicdb %>% 
+  filter(artist %in% top5) %>% 
+  dbplot_bar(artist) +   #<<
+     labs(title = "Top 5: # Songs and Albums",
+         x = "", y = "n")
+
+```
+
+* Reihenfolge der Balken nicht so einfach anzupassen
+* Nicht alle Funktionen zur Datenbearbeitung verfügbar (z. B. forcats)
+
+]
+.pull-right[
+```{r dbplot1_exec, ref.label = "dbplot1"}
+
+```
+
+]
+
+---
+
+# dbplot: Berechnungen in der Datenbank
+
+.pull-left[
+
+## Einfache Summen-Berechnung
+
+```{r db-compute-count, echo = TRUE, eval = FALSE}
+
+musicdb %>% 
+  filter(artist %in% top5) %>% 
+  db_compute_count(artist) %>%   #<<
+  arrange(desc(`n()`)) %>% 
+  ggplot(aes(x = fct_inorder(artist), y = `n()`)) +
+     geom_col() +    #<<
+     labs(title = "Top 5: # Songs and Albums",
+         x = "", y = "n")
+
+```
+
+* Hier wieder geom_col(), da die Statistiken zuvor berechnet wurden
+* Jetzt stehen wieder alle R-Funktionen zur Verfügung, wie forcats::fct_inorder()
+* Nur 5 Datenzeilen "wandern" aus der DB zu R
+
+]
+
+.pull-right[
+```{r db-compute-count-exec, ref.label = "db-compute-count"}
+
+```
+
+]
+
+---
+
+# dbplot: Histogramm
+
+Histogramm-Beispiel: Jahre, in denen Songs und Albums veröffentlicht wurden.
+
+.pull-left[
+```{r histogram, echo = TRUE, eval = FALSE}
+
+musicdb %>% 
+  dbplot_histogram(year, bins = 40) +   #<<
+  labs(title = "Histogram of Years",
+       subtitle = "Publication of Songs / Albums")
+
+```
+
+* Effizient: R erhält nur aggregierte Daten 
+
+]
+
+.pull-right[
+```{r histogram_exec, ref.label = "histogram"}
+
+```
+
+]
+
+---
+
+# Ein ineffizientes Streudiagramm
+
+.pull-left[
+
+```{r score-summary}
+
+musicdb %>% 
+  summarise(min = min(score),
+            # q1 = quantile(score, 0.25),
+            median = median(score),
+            mean = mean(score),
+            # q3 = quantile(score, 0.75),
+            max = max(score)) %>% 
+  kable(caption = "Verteilung der Punkte (Score)")
+
+```
+
+
+```{r scatterplot, eval = FALSE, echo = TRUE}
+
+musicdb %>% 
+  ggplot(aes(x = year, y = score)) +
+  geom_point(alpha = 0.1) + #<<
+  labs(title = "Scores by Year",
+       subtitle = "Scatterplot")
+
+```
+
+* ggplot benötigt Zugriff auf alle Datenpunkte in R
+* Zeitaufwand: Datentransfer und Diagrammerstellung selbst
+
+]
+
+.pull-right[
+
+```{r scatterplot-exec, ref.label = "scatterplot"}
+
+```
+
+]
+
+---
+
+# Effiziente Alternative: Rasterplot
+
+.pull-left[
+
+```{r raster-plot, echo = TRUE, eval = FALSE}
+
+musicdb %>% 
+  dbplot_raster(x = year, y = score, #<<
+                resolution = 40) +   #<<
+  labs(title = "Scores by Year",
+       subtitle = "Raster Plot") +
+  theme(legend.key.width = unit(3, "cm"),
+        legend.position = "bottom")
+
+```
+
+* Parameter *resolution* (Auflösung) in dplot_raster():  
+Anzahl der Kategorien (*bins*) pro Variable
+* Andere Aggregatfunktion möglich per *fill*-Parameter. Voreinstellung: Häufigkeit.
+* Wesentlich schnellere Ausführung.
+* Gleiche Schlussfolgerung: Mehrheit der Werte im niedrigen Punktebereich.
+
+]
+
+.pull-right[
+
+```{r raster-plot-exec, ref.label = "raster-plot"}
+```
+]
+---
+
+# dbplot: Zentrale Funktionen
+
+.pull-left[
+
+## Plotting / Diagrammerstellung
+
+* dbplot_bar()
+* dbplot_histogram()
+* dbplot_line()
+* dbplot_raster()
+* dbplot_boxplot()
+
+]
+
+.pull-right[
+
+## Berechnungen
+
+* db_compute_count()
+* db_compute_bins()
+* db_compute_raster()
+* db_compute_raster2():  
+Adds coordinates of x/y boxes
+* db_compute_boxplot()
+
+]
+
+---
+class: center, middle
+
+# Dank an das RStudio-Team!
+
+### Weitere Infos siehe https://db.rstudio.com/
+
+### Vor allem: Best Practices - Creating Visualizations
+
+```{r tidy-up}
+DBI::dbDisconnect(con)
+```
+
+---
+
+class: center, middle
+
+# Vielen Dank!
+
+### Youtube: StatistikinDD
+
+### Twitter: @StatistikinDD
+
+### github: fjodor
+
+Folien erstellt mit dem R-Paket [**xaringan**](https://github.com/yihui/xaringan).
+
+Das *Chakra* stammt von [remark.js](https://remarkjs.com), [**knitr**](https://yihui.org/knitr), und [R Markdown](https://rmarkdown.rstudio.com).
