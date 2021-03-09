@@ -1,0 +1,195 @@
+---
+title: "How to Speed Up ggplot2"
+subtitle: "Introducing ragg"
+author: "StatistikinDD"
+date: "Created: `r Sys.time()`"
+output:
+  xaringan::moon_reader:
+    chakra: libs/remark-latest.min.js
+    lib_dir: libs
+    css: ["libs/_css/my_css.css"]
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      slideNumberFormat: "%current%"
+      ratio: 16:9
+---
+
+```{r setup, include = FALSE}
+
+knitr::opts_chunk$set(warning = FALSE, message = FALSE, echo = FALSE, comment = "")
+
+# Show chunk header
+# Trick from https://bookdown.org/yihui/rmarkdown-cookbook/show-header.html
+
+# knitr::knit_hooks$set(wrapper = function(before, options) {
+#   # the original chunk might be indented
+#   if (is.null(indent <- options$indent)) indent <- ''
+# 
+#   # hide the wrapper = TRUE option
+#   opts <- gsub(', wrapper = TRUE', '', options$params.src)
+# 
+#   if (before) {
+#     # add the header
+#     sprintf('\n\n%s````\n```{r,%s}\n````\n', indent, opts)
+#   } else {
+#     # add the footer
+#     sprintf('\n\n%s````\n```\n````\n', indent)
+#   }
+# })
+
+```
+
+# Chart success data: tsort.info
+
+```{r read_data}
+
+library(tidyverse)
+library(ragg)
+library(ggthemes)
+library(tictoc)
+
+music <- readRDS("musicdata.rds")
+
+```
+
+* Data: `r nrow(music)` songs and albums
+* Source: https://tsort.info
+* Version: `r attr(music, "version")`
+* We plot the **Top 6 artists / bands** with the most songs / albums in the data
+
+--
+
+```{r data-head}
+
+music %>%
+  group_by(artist) %>% 
+  count() %>% 
+  arrange(desc(n)) %>% 
+  head() %>% 
+  knitr::kable()
+
+```
+
+
+```{r prepare1, echo = FALSE}
+
+theme_set(theme_solarized(base_size = 14))
+
+top6 <- music %>% 
+  group_by(artist) %>% 
+  count() %>% 
+  arrange(desc(n)) %>% 
+  head() %>% 
+  pull(artist)
+
+top6 <- music %>% 
+  filter(artist %in% top6) %>% 
+  mutate(artist = fct_infreq(artist))
+```
+
+---
+
+# The ggplot code: A function
+
+```{r prepare2, echo = TRUE}
+
+my_plot <- function() {    #<<
+  top6 %>% 
+  ggplot(aes(x = year, y = score)) +
+    geom_point(alpha = 0.6) +
+    geom_smooth(method = "gam") +           
+    facet_wrap(~ artist, scales = "free") +
+    scale_y_log10() +                     
+    theme(axis.text.x = element_text(angle = 90)) +
+    labs(title = "Scores by Year",
+         subtitle = "Top 6 Bands / Artists by # of Songs / Albums",
+         caption = "NB: Ranges of x and y axes vary!",
+         x = "Year", y = "Score")
+}
+
+```
+
+
+---
+
+## ggplot2 default plotting: cairo device
+
+```{r save-plot-default, echo = TRUE}
+
+tic()
+invisible(my_plot())
+ggsave("Images/Top6_ggplot-default.png", width = 7, height = 5)
+toc()
+
+```
+
+## ggplot2 powered by ragg
+
+```{r save-plot-ragg, echo = TRUE}
+
+tic()
+invisible(my_plot())
+ggsave("Images/Top6_ggplot-ragg.png", width = 7, height = 5,
+       device = agg_png())          #<<
+toc()
+
+```
+
+---
+
+# Default ggplot2: cairo device
+
+```{r plot-default, echo = TRUE, results = "hold", out.height = "35%", out.width = "49%", fig.align = "center"}
+
+dim(png::readPNG("Images/Top6_ggplot-default.png"))
+knitr::include_graphics("Images/Top6_ggplot-default.png")
+```
+
+---
+
+# ggplot2 powered by ragg
+
+```{r plot-ragg, echo = TRUE, results = "hold", out.height = "35%", out.width = "49%", fig.align = "center"}
+
+dim(png::readPNG("Images/Top6_ggplot-ragg.png"))
+knitr::include_graphics("Images/Top6_ggplot-ragg.png")
+```
+
+---
+
+# More about the ragg Package
+
+### R implementation of AGG: Anti-Grain Geometry Library
+
+### Main features
+
+* Performance: faster than the cairo device
+* Anti-aliasing: fully anti-aliased, including fill - as opposed to cairo
+* Text rendering
+* Font access
+* System independence
+
+### Find out more
+
+* ragg website: https://ragg.r-lib.org/index.html
+* tidyverse blog:
+  + ragg 0.1.0 release: https://www.tidyverse.org/blog/2019/07/ragg-0-1-0/
+  + ragg and systemfonts: https://www.tidyverse.org/blog/2020/05/updates-to-ragg-and-systemfonts/
+  + Modern Text Features in R: https://www.tidyverse.org/blog/2021/02/modern-text-features/
+
+---
+class: center, middle
+
+# Thanks!
+
+### Youtube: StatistikinDD
+
+### Twitter: @StatistikinDD
+
+### github: fjodor
+
+Slides created via the R package [**xaringan**](https://github.com/yihui/xaringan).
+
+The chakra comes from [remark.js](https://remarkjs.com), [**knitr**](https://yihui.org/knitr), and [R Markdown](https://rmarkdown.rstudio.com).
