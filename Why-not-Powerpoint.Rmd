@@ -1,0 +1,272 @@
+---
+title: "Presenting Data Analyses:<br><br>Why I don't use Powerpoint"
+subtitle: 
+author: "StatistikinDD"
+date: "Created: `r Sys.time()`"
+output:
+  xaringan::moon_reader:
+    chakra: libs/remark-latest.min.js
+    lib_dir: libs
+    css: ["libs/_css/xaringan-themer.css", "libs/_css/my_css.css"]
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      slideNumberFormat: "%current%"
+      ratio: 16:9
+---
+
+
+```{r setup, include = FALSE}
+
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, comment = "")
+
+# library(tidyverse)
+
+# From https://cran.r-project.org/web/packages/xaringanthemer/vignettes/xaringanthemer.html
+library(xaringanthemer)
+style_mono_accent(
+  base_color = "#1c5253",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono"),
+  outfile = "libs/_css/xaringan-themer.css"
+)
+
+```
+
+
+<!-- # Presenting Data Analyses: Why I don't use Powerpoint -->
+
+<!-- ### 1. Powerpoint Isn't Bad! -->
+<!-- ### 2. Why I Prefer Other Tools -->
+<!-- ### 3. Automation & Reproducibility -->
+<!-- ### 4. File Formats: Options & Limitations -->
+<!-- ### 5. File Sizes -->
+<!-- ### 6. Summary -->
+
+<!-- --- -->
+
+# Why I Prefer Other Tools
+
+<br>
+
+* ### Automation & Reproducibility
+
+* ### File Formats: Options & Limitations
+
+* ### File Sizes
+
+---
+
+# Powerpoint Isn't Bad!
+
+<br>
+
+## Powerpoint is here to stay
+
+.pull-left[
+* ### Easy to use
+
+* ### Well suited for presentations
+
+* ### Full of useful features
+]
+
+--
+
+.pull-right[
+![Powerpoint](https://media.giphy.com/media/94iS62lx8CRQA/giphy.gif)
+Source: https://giphy.com/
+]
+---
+
+# Automation & Reproducibility
+
+## All In One Place
+
+.pull-left[
+* ### Source document: Code  
+generates plots, tables, even text modules
+
+* ### No copying & pasting
+  + Reduce errors
+  + Reduce workload
+  + Only one place to keep everything up-to-date
+]
+
+--
+
+.pull-right[
+![R logo](https://www.r-project.org/logo/Rlogo.png)
+.center[https://www.r-project.org]
+
+]
+
+---
+
+# Automation & Reproducibility
+
+### Creating Slides Programmatically
+
+.pull-left[
+Changes in the data analysis process **automatically** transfer to the presentation:
+
+* Changes in data
+
+* Changes in data analysis procedures
+  + Modifying models
+  + Modifying metrics (KPIs)
+  + Adapting styles: plot themes, color scales, etc.
+]
+
+--
+
+.pull-right[
+![Markdown Logo](libs/_Images/markdown-logo.png)
+]
+
+---
+
+# File Formats: Options & Limitations
+
+### You *can* do this in Powerpoint
+
+.pull-left[
+```{r gapminder-animation, out.height = "50%", out.width = "80%"}
+knitr::include_graphics("libs/_Images/Gapminder.gif")
+```
+]
+
+.pull-right[
+* Animation of the famous **Gapminder** data
+* Check out **Hans Rosling**'s Youtube videos  
+<br>
+* Powered by **gganimate**  
+by ** Thomas L. Pedersen**
+* Source: https://gganimate.com/
+]
+
+---
+
+# File Formats: Options & Limitations
+
+### You *can't* do this in Powerpoint
+
+.pull-left[
+
+```{r plotly-gapminder}
+
+library(plotly)
+library(gapminder)
+
+data(gapminder)
+
+fig <- gapminder %>%
+  plot_ly(
+    x = ~gdpPercap, 
+    y = ~lifeExp, 
+    size = ~pop, 
+    color = ~continent, 
+    frame = ~year, 
+    text = ~country, 
+    hoverinfo = "text",
+    type = 'scatter',
+    mode = 'markers'
+  )
+fig <- fig %>% layout(
+    xaxis = list(
+      type = "log"
+    )
+  )
+
+library(widgetframe)
+frameWidget(fig, width = "100%", height = "40%")
+
+```
+
+]
+
+.pull-right[
+* Interactivity requires **Javascript**
+
+* Powered by the **plotly** package  
+by **Carson Sievert**
+* Source: https://plotly.com/r/animations/
+]
+
+---
+
+# File Formats: Options & Limitations
+
+### You *can't* do this in Powerpoint
+
+```{r DT-datatable}
+
+library(DT)
+tab <- datatable(gapminder,
+                 filter = "top",
+                 options = list(pageLength = 7))
+frameWidget(tab)
+
+```
+
+---
+
+# File Formats: Options & Limitations
+
+<br>
+
+.pull-left[
+.content-box-grey[
+## HTML
+
+**Javascript support** enables interactivity
+
+* Mouse-Over-Effects, zoomable charts, etc.
+* Tables with pagination, sorting and filtering capabilities
+
+ ]
+]
+
+.pull-right[
+.content-box-gray[
+## Powerpoint
+
+* No native Javascript support
+* Limited interactivity  
+(e. g. buttons, embedded animations & videos)
+
+ ]
+]
+
+---
+
+# File Sizes
+
+* ### Powerpoint Presentations may become very large  
+--> You may experience delays when opening the file
+
+* ### HTML-based formats can use subfolders  
+--> Quick startup, files loaded as needed
+
+* ### This presentation (an html file) is `r utils:::format.object_size(file.info("Why-not-Powerpoint.html")$size, "auto")`.
+
+---
+
+class: center, middle
+
+# Thanks!
+
+### Youtube: StatistikinDD
+
+### Twitter: @StatistikinDD
+
+### github: fjodor
+
+Slides created via the R package [**xaringan**](https://github.com/yihui/xaringan).
+
+The chakra comes from [remark.js](https://remarkjs.com), [**knitr**](https://yihui.org/knitr), and [R Markdown](https://rmarkdown.rstudio.com).
+
+Thanks to **Yihui Xie** for *{knitr}* and *{xaringan}* and **Garrick Aden-Buie** for *{xaringanthemer}*.
