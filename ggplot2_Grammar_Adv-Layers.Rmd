@@ -1,0 +1,363 @@
+---
+title: "ggplot2 & Grammar of Graphics<br><br>The Four Advanced Layers"
+subtitle: "Facets, Statistical Transformations,<br>Coordinate Systems, Themes"
+author: "StatistikinDD"
+date: "Created: `r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    chakra: libs/remark-latest.min.js
+    lib_dir: libs
+    css: ["libs/_css/xaringan-themer.css", "libs/_css/my_css.css"]
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      slideNumberFormat: "%current%"
+      ratio: 16:9
+---
+
+```{r setup, include = FALSE}
+
+options(htmltools.dir.version = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, comment = "")
+
+library(tidyverse)
+library(ggthemes)
+
+# From https://cran.r-project.org/web/packages/xaringanthemer/vignettes/xaringanthemer.html
+library(xaringanthemer)
+style_mono_accent(
+  base_color = "#1c5253",
+  header_font_google = google_font("Josefin Sans"),
+  text_font_google   = google_font("Montserrat", "300", "300i"),
+  code_font_google   = google_font("Fira Mono"),
+  outfile = "libs/_css/xaringan-themer.css"
+)
+
+theme_set(theme_gray(base_size = 18))
+
+```
+
+# ggplot2: Layers
+
+.pull-left[
+Next to the necessary basic layers, ...
+
+.content-box-grey[
+**1. Data**  
+**2. Aesthetics**  
+**3. Geometries**  
+ ]
+
+... there are four advanced / optional layers:
+
+.content-box-gray[
+**4. Facets: Display subgroups in separate plotting areas**  
+**5. Statistical transformations**  
+**6. Coordinate systems**  
+**7. Themes: *Non data ink* **  
+ ]
+]
+
+---
+
+# Our Starting Point
+
+## A Basic Scatterplot
+
+.pull-left[
+```{r more-aes, echo = TRUE, eval = FALSE}
+
+ggplot(diamonds, aes(x = carat, y = price)) + #<<
+  geom_point(size = 0.5, alpha = 0.5) + #<<
+  labs(title = "Diamonds: Price by Carat (weight)",
+       x = "Carat", y = "Price",
+       caption = "Diamonds dataset, ggplot2")
+
+```
+
+* To display over 50.000 data points, we use both a reduced point size and some opacity
+
+* Note that both price and carat are heavily right-skewed
+
+]
+
+.pull-right[
+```{r more-aes-exec, echo = FALSE, eval = TRUE, ref.label = "more-aes", cache = TRUE}
+```
+]
+
+---
+
+# Facets (Layer 4)
+
+.pull-left[
+```{r facets, echo = TRUE, eval = FALSE}
+
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point(size = 0.5, alpha = 0.5) +
+  facet_wrap(vars(cut)) + #<<
+  labs(title = "Diamonds: Price by carat (weight)",
+       x = "Carat", y = "Price",
+       caption = "Diamonds dataset, ggplot2")
+
+```
+
+* Specify layout using the  
+**nrow** and **ncol** parameters
+* You can use the formula interface:  
+**facet_wrap(~ cut)**
+* You can facet by two variables
+* Alternative to **facet_wrap()**: **facet_grid()**
+
+]
+
+.pull-right[
+```{r facets-exec, echo = FALSE, eval = TRUE, ref.label = "facets", cache = TRUE}
+```
+]
+
+---
+
+# Statistical transformations (Layer 5)
+
+## Adding a Linear Smooth (lm)
+
+.pull-left[
+```{r stats-lm, echo = TRUE, eval = FALSE}
+
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "lm") + #<<
+  labs(title = "Diamonds: Price by Carat (weight)",
+       subtitle = "Smoothing Method: lm", #<<
+       x = "Carat", y = "Price",
+       caption = "Diamonds dataset, ggplot2")
+
+```
+
+* Check out the **stat_xxx()** functions
+* Use case: *stat_summary()* to show means in boxplots
+
+]
+
+.pull-right[
+```{r stats-lm-exec, echo = FALSE, eval = TRUE, ref.label = "stats-lm", cache = TRUE}
+```
+]
+
+---
+
+# Statistical transformations (Layer 5)
+
+## Adding a Nonlinear Smooth (gam)
+
+```{r, echo = FALSE}
+theme_set(theme_gray(base_size = 18))
+```
+
+
+.pull-left[
+```{r stats-gam, echo = TRUE, eval = FALSE}
+
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "gam") + #<<
+  labs(title = "Diamonds: Price by Carat (weight)",
+       subtitle = "Smoothing Method: gam", #<<
+       x = "Carat", y = "Price",
+       caption = "Diamonds dataset, ggplot2")
+
+```
+
+GAM = Generalized Additive Model
+
+]
+
+.pull-right[
+```{r stats-gam-exec, echo = FALSE, eval = TRUE, ref.label = "stats-gam", cache = TRUE}
+```
+]
+
+---
+
+# Coordinate Systems (Layer 6)
+
+## Use logarithmic axes, label price in dollars
+
+.pull-left[
+```{r stats-coord, echo = TRUE, eval = FALSE}
+
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "gam") +
+  scale_x_log10() + #<<
+  scale_y_log10(labels = scales::dollar) + #<<
+  labs(title = "Diamonds: Price by Carat (weight)",
+       subtitle = "Axes on Base 10 Log Scale\nSmoothing Method: gam",
+       x = "Carat", y = "Price",
+       caption = "Diamonds dataset, ggplot2")
+
+```
+
+* More options for transformations:  
+*scale_x_continuous(trans = ...)*
+* Create custom transformations via *scales::trans_new()*
+
+]
+
+.pull-right[
+```{r stats-coord-exec, echo = FALSE, eval = TRUE, ref.label = "stats-coord", cache = TRUE}
+```
+]
+
+---
+
+# Themes (Layer 7)
+
+## Theme Classic
+
+```{r ggplot-p, echo = FALSE, eval = TRUE}
+
+p <- ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_point(size = 0.5, alpha = 0.5) +
+  geom_smooth(method = "gam") +
+  scale_x_log10() + #<<
+  scale_y_log10(labels = scales::dollar) + #<<
+  labs(title = "Diamonds: Price by Carat (weight)",
+       subtitle = "Axes on Base 10 Log Scale\nSmoothing Method: gam",
+       x = "Carat", y = "Price",
+       caption = "Diamonds dataset, ggplot2")
+
+# Increasing font sizes
+
+```
+
+.pull-left[
+```{r theme-classic, echo = TRUE, eval = FALSE, cache = TRUE}
+
+p + theme_classic()
+
+```
+
+* We define the plot using `p <- ggplot(...)`.
+* Then we can simply define a theme using `p + theme_xxx()`.
+
+]
+
+.pull-right[
+```{r theme-classic-exec, echo = FALSE, eval = TRUE, cache = TRUE}
+
+p + theme_classic(base_size = 18)
+
+```
+
+]
+
+---
+
+# Themes (Layer 7)
+
+## Theme Dark
+
+```{r, echo = FALSE}
+theme_set(theme_dark(base_size = 18))
+```
+
+.pull-left[
+```{r theme-dark, echo = TRUE, eval = FALSE, cache = TRUE}
+
+p + theme_dark()
+
+```
+
+See more themes: Type *?theme_* in RStudio
+
+]
+
+.pull-right[
+```{r theme-dark-exec, echo = FALSE, eval = TRUE, cache = TRUE}
+p + theme_dark(base_size = 18)
+```
+]
+
+---
+
+# Themes (Layer 7)
+
+## More pre-defined themes: ggthemes
+
+.pull-left[
+```{r theme-wsj, echo = TRUE, eval = FALSE, cache = TRUE}
+
+library(ggthemes)
+
+p + theme_wsj()
+
+```
+
+* theme_wsj(): Based on plots in  
+*The Wall Street Journal*
+
+* More themes: See packages  
+**hrbrthemes** and **ggtech**
+
+]
+
+.pull-right[
+```{r theme-wsj-exec, echo = FALSE, eval = TRUE, cache = TRUE}
+p + theme_wsj()
+```
+
+]
+
+---
+
+# Themes (Layer 7)
+
+## A Simple Theme Customization
+
+```{r, echo = FALSE}
+theme_set(theme_gray(base_size = 18))
+```
+
+.pull-left[
+```{r theme-custom, echo = TRUE, eval = FALSE}
+
+p + theme(
+  panel.background = element_blank(),
+  panel.grid = element_blank(),
+  axis.text = element_text(colour = "darkblue"))
+
+```
+
+* Starting point: Default theme theme_gray()
+* Remove gray background
+* Remove grid lines
+* Change font color for axes labels to dark blue
+
+]
+
+.pull-right[
+```{r theme-custom-exec, echo = FALSE, eval = TRUE, ref.label = "theme-custom", cache = TRUE}
+
+```
+]
+
+---
+
+class: center, middle
+
+# Thanks!
+
+### Youtube: StatistikinDD
+
+### Twitter: @StatistikinDD
+
+### github: fjodor
+
+Slides created via the R package [**xaringan**](https://github.com/yihui/xaringan).
+
+The chakra comes from [remark.js](https://remarkjs.com), [**knitr**](https://yihui.org/knitr), and [R Markdown](https://rmarkdown.rstudio.com).
+
+Thanks to **Yihui Xie** for *{knitr}* and *{xaringan}* and **Garrick Aden-Buie** for *{xaringanthemer}*.
