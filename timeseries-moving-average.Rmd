@@ -1,0 +1,240 @@
+---
+title: "Visualizing Time Series in R<br><br>Using tidyverse and tidyquant"
+subtitle: "Daily Stock Prices and Moving Averages"
+author: "StatistikinDD"
+date: "Created: `r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    chakra: libs/remark-latest.min.js
+    lib_dir: libs
+    css: ["libs/_css/xaringan-themer.css", "libs/_css/my_css.css"]
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      slideNumberFormat: "%current%"
+      ratio: 16:9
+---
+
+```{r setup, include = FALSE}
+
+options(htmltools.dir.version = FALSE)
+# knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, comment = "")
+knitr::opts_chunk$set(echo = FALSE, comment = "")
+
+library(knitr)
+library(ggplot2)
+theme_set(theme_gray(base_size = 16))
+
+```
+
+# The tidyquant package
+
+* Authors: Matt Dancho, Davis Vaughan
+* Maintainer: Matt Dancho
+* Check out https://www.business-science.io/
+
+** A Bridge between Time Series specific packages and the Tidyverse**
+
+--
+
+```{r, out.height = "75%", out.width = "75%", fig.align = "center"}
+knitr::include_graphics("libs/_Images/tidyquant-tidyverse.png")
+```
+
+Source: Youtube video, see *Introduction to tidyquant* vignette  
+`help(package = "tidyquant")`
+
+---
+
+# Getting Amazon Stock Prices
+
+```{r get-data, echo = TRUE, message = FALSE}
+
+library(tidyverse)
+library(tidyquant)
+
+AMZN <- tq_get("AMZN", from = "2015-01-01", to = "2021-05-31")
+
+head(AMZN) %>% kable()
+
+```
+
+---
+
+# A First Line Plot: Amazon Stock Prices
+
+.pull-left[
+```{r first-plot, echo = TRUE, eval = FALSE}
+
+AMZN %>%
+  ggplot(aes(x = date, y = adjusted)) +
+  geom_line() 
+
+```
+]
+
+.pull-right[
+```{r, ref.label = "first-plot"}
+```
+]
+
+---
+
+# Some Finetuning
+
+.pull-left[
+```{r finetuning, echo = TRUE, eval = FALSE}
+
+theme_set(ggthemes::theme_wsj()) #<<
+
+AMZN %>%
+  ggplot(aes(x = date, y = adjusted)) +
+  geom_line() +
+  scale_y_continuous( #<<
+    labels = scales::label_dollar(), #<<
+    position = "right") + #<<
+  labs(title = "Amazon Stock Price",
+       x = "")
+
+```
+]
+
+.pull-right[
+```{r, ref.label = "finetuning"}
+```
+]
+
+---
+
+# Zooming in: From 2020-01-01, into Covid
+
+.pull-left[
+```{r zoom-in, echo = TRUE, eval = FALSE}
+
+AMZN %>%
+  ggplot(aes(x = date, y = adjusted)) +
+  geom_line() +
+  scale_y_continuous(
+    labels = scales::label_dollar(),
+    position = "right") +
+  coord_x_date( #<<
+      xlim = c("2020-01-01", "2021-05-31"), #<<
+      ylim = c(1500, 3500)) + #<<
+  labs(title = "Amazon Stock Price",
+       x = "")
+```
+]
+
+.pull-right[
+```{r, ref.label = "zoom-in"}
+```
+]
+
+---
+
+# Adding A 30 Day Moving Average
+
+.pull-left[
+```{r sma-30, echo = TRUE, eval = FALSE}
+
+AMZN %>%
+  ggplot(aes(x = date, y = adjusted)) +
+  geom_line() +
+  geom_ma(ma_fun = SMA, n = 30, size = 1.2) + #<<
+  scale_y_continuous(
+    labels = scales::label_dollar(),
+    position = "right") +
+  coord_x_date( 
+      xlim = c("2020-01-01", "2021-05-31"), 
+        ylim = c(1500, 3500)) + 
+  labs(title = "Amazon Stock Price",
+       x = "")
+```
+]
+
+.pull-right[
+```{r, ref.label = "sma-30"}
+```
+]
+
+---
+
+# Adding A 90 Day Moving Average
+
+.pull-left[
+```{r sma-90, echo = TRUE, eval = FALSE}
+
+AMZN %>%
+  ggplot(aes(x = date, y = adjusted)) +
+  geom_line() +
+  geom_ma(ma_fun = SMA, n = 30, size = 1.2) + #<<
+  geom_ma(ma_fun = SMA, n = 90, #<<
+          color = "green", size = 1.2) + #<<
+  scale_y_continuous(
+    labels = scales::label_dollar(),
+    position = "right") +
+  coord_x_date( 
+      xlim = c("2020-01-01", "2021-05-31"), 
+        ylim = c(1500, 3500)) + 
+  labs(title = "Amazon Stock Price",
+       x = "")
+```
+]
+
+.pull-right[
+```{r, ref.label = "sma-90"}
+```
+]
+
+---
+
+# Adding A Custom Legend
+
+.pull-left[
+```{r legend, echo = TRUE, eval = FALSE}
+
+AMZN %>%
+  ggplot(aes(x = date, y = adjusted)) +
+  geom_line(aes(color = "Daily")) + #<<
+  scale_y_continuous(
+    labels = scales::label_dollar(),
+    position = "right") +
+  coord_x_date(xlim = c("2020-01-01", "2021-05-31"),
+                 ylim = c(1500, 3500)) +
+  labs(title = "Amazon Stock Price", x = "",
+       subtitle = "Daily Adjusted / \nSimple Moving Averages (SMA)",
+       caption = "Created using R, tidyverse, \n ggthemes, and tidyquant") +
+  geom_ma(ma_fun = SMA, n = 30,
+      aes(color = "30 Day SMA")) + #<<
+  geom_ma(ma_fun = SMA, n = 90,
+      aes(color = "90 Day SMA")) + #<<
+  scale_color_manual(name = "", #<<
+      values = c("Daily" = "black", #<<
+                 "30 Day SMA" = "blue", #<<
+                 "90 Day SMA" = "green")) #<<
+```
+]
+
+.pull-right[
+```{r, ref.label = "legend"}
+```
+]
+
+---
+
+class: center, middle
+
+# Thanks!
+
+### Youtube: StatistikinDD
+
+### Twitter: @StatistikinDD
+
+### github: fjodor
+
+Slides created via the R package [**xaringan**](https://github.com/yihui/xaringan).
+
+The chakra comes from [remark.js](https://remarkjs.com), [**knitr**](https://yihui.org/knitr), and [R Markdown](https://rmarkdown.rstudio.com).
+
+Thanks to **Yihui Xie** for *{knitr}* and *{xaringan}* and **Garrick Aden-Buie** for *{xaringanthemer}*.
