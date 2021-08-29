@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>Presenting Data Analyses:  Why I don’t use Powerpoint</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="StatistikinDD" />
+    <script src="libs/header-attrs/header-attrs.js"></script>
+    <script src="libs/htmlwidgets/htmlwidgets.js"></script>
+    <script src="libs/pymjs/pym.v1.js"></script>
+    <script src="libs/widgetframe-binding/widgetframe.js"></script>
+    <link rel="stylesheet" href="libs/_css/xaringan-themer.css" type="text/css" />
+    <link rel="stylesheet" href="libs/_css/my_css.css" type="text/css" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# Presenting Data Analyses:<br><br>Why I don’t use Powerpoint
+### StatistikinDD
+### Created: 2021-03-18 15:12:28
+
+---
+
+
+
+
+
+
+&lt;!-- # Presenting Data Analyses: Why I don't use Powerpoint --&gt;
+
+&lt;!-- ### 1. Powerpoint Isn't Bad! --&gt;
+&lt;!-- ### 2. Why I Prefer Other Tools --&gt;
+&lt;!-- ### 3. Automation &amp; Reproducibility --&gt;
+&lt;!-- ### 4. File Formats: Options &amp; Limitations --&gt;
+&lt;!-- ### 5. File Sizes --&gt;
+&lt;!-- ### 6. Summary --&gt;
+
+&lt;!-- --- --&gt;
+
+# Why I Prefer Other Tools
+
+&lt;br&gt;
+
+* ### Automation &amp; Reproducibility
+
+* ### File Formats: Options &amp; Limitations
+
+* ### File Sizes
+
+---
+
+# Powerpoint Isn't Bad!
+
+&lt;br&gt;
+
+## Powerpoint is here to stay
+
+.pull-left[
+* ### Easy to use
+
+* ### Well suited for presentations
+
+* ### Full of useful features
+]
+
+--
+
+.pull-right[
+![Powerpoint](https://media.giphy.com/media/94iS62lx8CRQA/giphy.gif)
+Source: https://giphy.com/
+]
+---
+
+# Automation &amp; Reproducibility
+
+## All In One Place
+
+.pull-left[
+* ### Source document: Code  
+generates plots, tables, even text modules
+
+* ### No copying &amp; pasting
+  + Reduce errors
+  + Reduce workload
+  + Only one place to keep everything up-to-date
+]
+
+--
+
+.pull-right[
+![R logo](https://www.r-project.org/logo/Rlogo.png)
+.center[https://www.r-project.org]
+
+]
+
+---
+
+# Automation &amp; Reproducibility
+
+### Creating Slides Programmatically
+
+.pull-left[
+Changes in the data analysis process **automatically** transfer to the presentation:
+
+* Changes in data
+
+* Changes in data analysis procedures
+  + Modifying models
+  + Modifying metrics (KPIs)
+  + Adapting styles: plot themes, color scales, etc.
+]
+
+--
+
+.pull-right[
+![Markdown Logo](libs/_Images/markdown-logo.png)
+]
+
+---
+
+# File Formats: Options &amp; Limitations
+
+### You *can* do this in Powerpoint
+
+.pull-left[
+&lt;img src="libs/_Images/Gapminder.gif" width="80%" height="50%" /&gt;
+]
+
+.pull-right[
+* Animation of the famous **Gapminder** data
+* Check out **Hans Rosling**'s Youtube videos  
+&lt;br&gt;
+* Powered by **gganimate**  
+by ** Thomas L. Pedersen**
+* Source: https://gganimate.com/
+]
+
+---
+
+# File Formats: Options &amp; Limitations
+
+### You *can't* do this in Powerpoint
+
+.pull-left[
+
+<div id="htmlwidget-20384aeff452e9a93b63" style="width:100%;height:40%;" class="widgetframe html-widget"></div>
+<script type="application/json" data-for="htmlwidget-20384aeff452e9a93b63">{"x":{"url":"Why-not-Powerpoint_files/figure-html//widgets/widget_plotly-gapminder.html","options":{"xdomain":"*","allowfullscreen":false,"lazyload":false}},"evals":[],"jsHooks":[]}</script>
+
+]
+
+.pull-right[
+* Interactivity requires **Javascript**
+
+* Powered by the **plotly** package  
+by **Carson Sievert**
+* Source: https://plotly.com/r/animations/
+]
+
+---
+
+# File Formats: Options &amp; Limitations
+
+### You *can't* do this in Powerpoint
+
+<div id="htmlwidget-e25f04d8764555da6b9c" style="width:100%;height:504px;" class="widgetframe html-widget"></div>
+<script type="application/json" data-for="htmlwidget-e25f04d8764555da6b9c">{"x":{"url":"Why-not-Powerpoint_files/figure-html//widgets/widget_DT-datatable.html","options":{"xdomain":"*","allowfullscreen":false,"lazyload":false}},"evals":[],"jsHooks":[]}</script>
+
+---
+
+# File Formats: Options &amp; Limitations
+
+&lt;br&gt;
+
+.pull-left[
+.content-box-grey[
+## HTML
+
+**Javascript support** enables interactivity
+
+* Mouse-Over-Effects, zoomable charts, etc.
+* Tables with pagination, sorting and filtering capabilities
+
+ ]
+]
+
+.pull-right[
+.content-box-gray[
+## Powerpoint
+
+* No native Javascript support
+* Limited interactivity  
+(e. g. buttons, embedded animations &amp; videos)
+
+ ]
+]
+
+---
+
+# File Sizes
+
+* ### Powerpoint Presentations may become very large  
+--&gt; You may experience delays when opening the file
+
+* ### HTML-based formats can use subfolders  
+--&gt; Quick startup, files loaded as needed
+
+* ### This presentation (an html file) is 9.6 Kb.
+
+---
+
+class: center, middle
+
+# Thanks!
+
+### Youtube: StatistikinDD
+
+### Twitter: @StatistikinDD
+
+### github: fjodor
+
+Slides created via the R package [**xaringan**](https://github.com/yihui/xaringan).
+
+The chakra comes from [remark.js](https://remarkjs.com), [**knitr**](https://yihui.org/knitr), and [R Markdown](https://rmarkdown.rstudio.com).
+
+Thanks to **Yihui Xie** for *{knitr}* and *{xaringan}* and **Garrick Aden-Buie** for *{xaringanthemer}*.
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="libs/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false,
+"slideNumberFormat": "%current%",
+"ratio": "16:9"
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
