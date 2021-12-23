@@ -1,0 +1,258 @@
+---
+title: "How to Visualize Missing Values in R<br>using *naniar*"
+subtitle: ""
+author: "StatistikinDD"
+date: "Created: `r Sys.Date()`"
+output:
+  xaringan::moon_reader:
+    chakra: libs/remark-latest.min.js
+    lib_dir: libs
+    css: ["xaringan-themer.css", "libs/_css/my_css.css"]
+    nature:
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+      slideNumberFormat: "%current%"
+      ratio: 16:9
+---
+
+```{r setup, include = FALSE}
+
+options(htmltools.dir.version = FALSE)
+# knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE, comment = "")
+knitr::opts_chunk$set(echo = FALSE, comment = "")
+xaringanthemer::style_mono_accent(title_slide_background_color = "#EDF4FB",
+                                  title_slide_text_color = "#000000")
+
+library(knitr)
+library(tidyverse)
+library(naniar)
+```
+
+# The Data: ggplot2::diamonds
+
+### 53940 diamonds, described by 10 variables.
+
+Variable | Description
+---------|-------------
+**price** | Price in US Dollars, from *326$ to 18.823$*
+**carat** | weight of diamond, from *0.2 to 5.01*
+**cut** | quality of the cut: *Fair, Good, Very Good, Ideal*
+color | from *D (best) to J (worst)*
+clarity | *I1 (worst), SI2, SI1, VS2, VS1, VVS2, VVS1, IF (best)*
+x, y, z | length, width, depth in mm
+depth | total depth percentage
+table | width of diamond relative to widest point
+
+* Random Sample of `r format(n, big.mark = ".", decimal.mark = ",")` data points
+* No missings originally, but I introduced some ...
+
+```{r data-prep1}
+
+n = 5000
+data(diamonds)
+
+set.seed(2021)
+diamonds <- diamonds %>% 
+  slice_sample(n = n)
+
+diamonds <- diamonds %>%
+  mutate(price = case_when(
+    between(carat, 1.7, 2.3) ~ NA_integer_,
+    TRUE ~ price
+  ))
+
+```
+
+---
+
+# Quick Overview: `vis_miss()`
+
+```{r vis-miss, echo = TRUE, eval = FALSE}
+library(naniar)
+
+# originally from visdat package, but integrated into naniar
+vis_miss(diamonds)   #<<
+```
+
+```{r, fig.width = 14, fig.height = 5}
+vis_miss(diamonds) + theme_gray(base_size = 16)
+```
+
+
+---
+
+# Visualize Missingness: A Scatterplot
+
+.pull-left[
+```{r geom-miss-point, echo = TRUE, eval = FALSE}
+
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_miss_point() +  #<<
+  theme_bw(base_size = 16) +
+  labs(title = "Price by Carat",
+       caption = paste0("Source: ggplot2::diamonds,
+       random sample (n = ", n, ")"))
+```
+
+#### Missings appear only in a small range of carat values
+
+]
+
+.pull-right[
+```{r, ref.label = "geom-miss-point"}
+```
+]
+
+---
+
+# Second Example
+
+```{r, data-prep2}
+
+data(diamonds)
+set.seed(2021)
+
+diamonds <- diamonds %>%
+  slice_sample(n = n)
+
+# Example for random missings
+# ... but that is not so interesting to show ...
+
+# missings <- diamonds %>% 
+#   rownames_to_column(var = "id") %>% 
+#   slice_sample(prop = 0.05) %>% 
+#   pull(id)
+# 
+# misprice <- rownames(diamonds) %in% missings
+# 
+# diamonds <- diamonds %>%
+#   mutate(price = ifelse(misprice, NA_integer_, price))
+
+# More interesting: A pattern that is not visible at first
+
+diamonds <- diamonds %>%
+  mutate(price = case_when(
+    cut == "Ideal" & clarity %in% c("VS2", "VS1") ~ NA_integer_,
+    TRUE ~ price
+  ))
+
+
+```
+
+.pull-left[
+```{r, ref.label = "geom-miss-point", echo = TRUE, eval = FALSE}
+```
+
+#### Missings look more random now
+
+]
+
+.pull-right[
+```{r, ref.label = "geom-miss-point"}
+```
+]
+
+---
+
+# Fully Integrated in ggplot2: Facets
+
+.pull-left[
+```{r facets, echo = TRUE, eval = FALSE}
+ggplot(diamonds, aes(x = carat, y = price)) +
+  geom_miss_point() +  #<<
+  theme_bw(base_size = 16) +
+  labs(title = "Price by Carat",
+       caption = paste0("Source: ggplot2::diamonds,
+       random sample (n = ", n, ")")) +
+  facet_wrap(vars(cut)) #<<
+```
+
+#### Now we see: Missings appear only when cut is "Ideal"! 
+
+]
+
+.pull-right[
+```{r, ref.label = "facets"}
+```
+]
+
+---
+
+# About the *naniar* Package
+
+.pull-left[
+```{r, out.width = "40%", out.height = "40%", fig.align = "center"}
+knitr::include_graphics("libs/_Images/logo-naniar.png")
+```
+
+### Author: Nicholas Tierney
+
+* https://www.njtierney.com/
+* Twitter: @nj_tierney
+* Github: njtierney
+
+]
+
+.pull-right[
+
+Well documented: several **vignettes**; see  
+`help(package = "naniar")`  
+
+* Getting started with naniar
+* Functions to replace values with NA
+* Exploring imputed values
+* Gallery of Missing Data Visualisations
+
+### The Shadow Matrix
+
+* Additional data structure, same dimension as data
+* Indicates missingness: `NA` / `!NA`
+* Applications:
+  + compare missing / non-missing data
+  + evaluate missing value imputations
+
+]
+
+---
+
+# Outlook on Further Topics
+
+### Imputing missing values
+
+* The **simputation** package works well with naniar; examples in naniar vignette
+* **mice** is very popular
+* **Amelia** - named after aviation pioneer ***Amelia Earhart (1897 - 1937)*** who tragically went missing while attempting a *circumnavigational* flight of the globe
+* Machine Learning, *tidyverse* style: the ***recipes*** package, part of ***tidymodels***  
+  `step_impute_` functions: mean / median / mode imputation, bagging, knn, rolling windows
+
+.pull-left[
+### CRAN Task View
+
+CRAN Task View on **Missing Data**  
+https://cran.r-project.org/web/views/MissingData.html
+]
+
+.pull-right[
+### More naniar functions
+* Visualization: `gg_miss_var(), gg_miss_case(), gg_miss_fct()`
+* Numerical summaries: `miss_var_summary, miss_var_table`; also for *cases*
+]
+
+---
+
+class: center, middle
+
+# Thanks!
+
+### Youtube: StatistikinDD
+
+### Twitter: @StatistikinDD
+
+### github: fjodor
+
+Slides created via the R package [**xaringan**](https://github.com/yihui/xaringan).
+
+The chakra comes from [remark.js](https://remarkjs.com), [**knitr**](https://yihui.org/knitr), and [R Markdown](https://rmarkdown.rstudio.com).
+
+Thanks to **Yihui Xie** for *{knitr}* and *{xaringan}* and **Garrick Aden-Buie** for *{xaringanthemer}*.
